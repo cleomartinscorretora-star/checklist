@@ -13,8 +13,7 @@
   <style>
     :root {
       --bg: #F7F4EF;
-      --text: #5B3A2E;
-      --heading: #4A2F26;
+      --text: #4A2F26;
       --accent: #C38A6B;
       --line: rgba(74, 47, 38, 0.14);
       --soft: rgba(195, 138, 107, 0.10);
@@ -80,7 +79,7 @@
     .progress-bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #D7A287, #C38A6B, #A86F53);
+      background: linear-gradient(90deg, var(--accent), var(--text));
       border-radius: 999px;
       transition: width 0.25s ease;
     }
@@ -100,7 +99,7 @@
 
     h1, h2, h3 {
       font-family: "Playfair Display", serif;
-      color: var(--heading);
+      color: var(--text);
       line-height: 1.2;
       margin: 0;
     }
@@ -114,7 +113,6 @@
       font-size: 1.08rem;
       font-weight: 600;
       margin: 0 0 10px;
-      color: var(--heading);
     }
 
     .intro {
@@ -163,7 +161,6 @@
     .section-title {
       font-size: clamp(1.35rem, 2.8vw, 1.8rem);
       margin-bottom: 4px;
-      color: var(--heading);
     }
 
     .section-note {
@@ -203,7 +200,6 @@
       margin-bottom: 8px;
       font-size: 0.98rem;
       padding: 0;
-      color: var(--heading);
     }
 
     fieldset {
@@ -230,7 +226,7 @@
 
     .option input[type="radio"],
     .option input[type="checkbox"] {
-      accent-color: #D7A287;
+      accent-color: var(--text);
       width: 18px;
       height: 18px;
       flex: 0 0 auto;
@@ -439,7 +435,7 @@
         </div>
 
         <div class="field">
-          <label class="label" for="pornTimes">Se sim, quantas vezes? <span class="required-mark">*</span></label>
+          <label class="label" for="pornTimes">Se sim, quantas vezes?</label>
           <input type="number" min="0" id="pornTimes" name="pornTimes" placeholder="Ex.: 1" data-track="true" />
         </div>
 
@@ -609,7 +605,7 @@
         </div>
 
         <div class="field">
-          <label class="label" for="beforeFeelingOther">Se marcou outro, qual? <span class="required-mark">*</span></label>
+          <label class="label" for="beforeFeelingOther">Se marcou outro, qual?</label>
           <input type="text" id="beforeFeelingOther" name="beforeFeelingOther" placeholder="Ex.: cansado" data-track="true" />
         </div>
 
@@ -680,13 +676,15 @@
     const printBtn = document.getElementById('printBtn');
     const pdfBtn = document.getElementById('pdfBtn');
 
+    // Lista exata de campos obrigatórios conforme solicitado
     const requiredNames = [
-      'clientName','fillDate','pornSeen','heldUrge','selfTouch','touchMode','daysWithout',
-      'blockedContent','avoidedSocial','phoneInBed','coldShower','movement','strongUrges',
-      'pausedBeforeActing','techniques','streetTrigger','whatDidYouDo','beforeFeeling',
-      'afterFeeling','weekScore','didWell','slipped','nextWeek'
+      'clientName', 'fillDate', 'pornSeen', 'heldUrge', 'selfTouch', 'touchMode', 'daysWithout',
+      'blockedContent', 'avoidedSocial', 'phoneInBed', 'coldShower', 'movement', 'strongUrges',
+      'pausedBeforeActing', 'techniques', 'streetTrigger', 'whatDidYouDo', 'beforeFeeling',
+      'afterFeeling', 'weekScore', 'didWell', 'slipped', 'nextWeek'
     ];
 
+    // Event Listeners
     form.addEventListener('input', saveForm);
     form.addEventListener('change', saveForm);
     window.addEventListener('beforeunload', saveForm);
@@ -775,8 +773,7 @@
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
-            .replace(/
-/g, '<br>')
+            .replace(/\n/g, '<br>')
         : 'Não preenchido';
 
       return `
@@ -787,139 +784,198 @@
       `;
     }
 
-    async function exportPDF() {
-      if (!validateForm()) {
-        alert('Preencha todos os campos obrigatórios antes de gerar o PDF.');
-        return;
-      }
+   async function exportPDF() {
+  if (!validateForm()) {
+    alert('Por favor, preencha todos os campos obrigatórios antes de gerar o PDF.');
+    return;
+  }
 
-      const originalBtnText = pdfBtn.textContent;
-      pdfBtn.textContent = 'Gerando PDF...';
-      pdfBtn.disabled = true;
+  const originalBtnText = pdfBtn.textContent;
+  pdfBtn.textContent = 'Gerando PDF...';
+  pdfBtn.disabled = true;
 
-      const data = getFormData();
-      const printArea = document.createElement('div');
-      printArea.style.position = 'fixed';
-      printArea.style.left = '-99999px';
-      printArea.style.top = '0';
-      printArea.style.width = '794px';
-      printArea.style.padding = '36px 40px';
-      printArea.style.background = '#ffffff';
-      printArea.style.color = '#4A2F26';
-      printArea.style.fontFamily = 'Montserrat, sans-serif';
-      printArea.style.boxSizing = 'border-box';
-      printArea.style.zIndex = '-1';
+  try {
+    const data = getFormData();
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
 
-      printArea.innerHTML = `
-        <div style="max-width: 714px; margin: 0 auto;">
-          <div style="border-bottom: 1px solid rgba(74,47,38,0.14); padding-bottom: 16px; margin-bottom: 22px;">
-            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: rgba(74,47,38,.65); margin-bottom: 10px;">Checklist semanal</div>
-            <div style="font-family: 'Playfair Display', serif; font-size: 28px; line-height: 1.2; font-weight: 700; margin-bottom: 6px;">Controle e consciência</div>
-            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Pra você se observar com sinceridade</div>
-            <div style="font-size: 14px; color: rgba(74,47,38,.85);">Nome: ${data.clientName || 'Não preenchido'}<br>Data do preenchimento: ${data.fillDate || 'Não preenchida'}</div>
-          </div>
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 16;
+    const topMargin = 18;
+    const bottomMargin = 18;
+    const contentWidth = pageWidth - (margin * 2);
 
-          <div style="font-size: 14px;">
-            <div style="margin-bottom: 22px;">
-              <div style="font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; margin-bottom: 10px;">1. Seu comportamento na semana</div>
-              ${formatAnswer('Você viu pornografia?', data.pornSeen)}
-              ${formatAnswer('Se sim, quantas vezes?', data.pornTimes)}
-              ${formatAnswer('Teve vontade e conseguiu segurar algumas vezes?', data.heldUrge)}
-              ${formatAnswer('Teve momentos que você se tocou?', data.selfTouch)}
-              ${formatAnswer('Foi mais por escolha ou no automático?', data.touchMode)}
-              ${formatAnswer('Conseguiu ficar alguns dias sem fazer?', data.daysWithout)}
-            </div>
+    let y = topMargin;
 
-            <div style="margin-bottom: 22px;">
-              <div style="font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; margin-bottom: 10px;">2. Seu ambiente</div>
-              ${formatAnswer('Bloqueou ou evitou conteúdos que te estimulam?', data.blockedContent)}
-              ${formatAnswer('Evitou redes sociais com conteúdo sexual?', data.avoidedSocial)}
-              ${formatAnswer('Usou celular na cama?', data.phoneInBed)}
-            </div>
-
-            <div style="margin-bottom: 22px;">
-              <div style="font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; margin-bottom: 10px;">3. Seu corpo</div>
-              ${formatAnswer('Banho frio ou final frio', data.coldShower)}
-              ${formatAnswer('Movimento físico', data.movement)}
-            </div>
-
-            <div style="margin-bottom: 22px;">
-              <div style="font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; margin-bottom: 10px;">4. Quando veio a vontade</div>
-              ${formatAnswer('Quantas vezes sentiu vontade de assistir pornografia?', data.strongUrges)}
-              ${formatAnswer('Em quantas você conseguiu parar antes de agir?', data.pausedBeforeActing)}
-              ${formatAnswer('Você aplicou alguma técnica nesses momentos?', data.techniques)}
-              ${formatAnswer('Quando viu mulheres na rua, conseguiu controlar o olhar e os pensamentos?', data.streetTrigger)}
-              ${formatAnswer('O que você fez nessas horas?', data.whatDidYouDo)}
-            </div>
-
-            <div style="margin-bottom: 22px;">
-              <div style="font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; margin-bottom: 10px;">5. Como você estava se sentindo</div>
-              ${formatAnswer('Antes da vontade, você estava mais:', data.beforeFeeling)}
-              ${formatAnswer('Se marcou outro, qual?', data.beforeFeelingOther)}
-              ${formatAnswer('Depois, você se sentiu:', data.afterFeeling)}
-            </div>
-
-            <div style="margin-bottom: 22px;">
-              <div style="font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; margin-bottom: 10px;">6. Sua visão da semana</div>
-              ${formatAnswer('Que nota você dá pra sua semana? (0 a 10)', data.weekScore)}
-              ${formatAnswer('O que você fez bem?', data.didWell)}
-              ${formatAnswer('Onde você vacilou?', data.slipped)}
-              ${formatAnswer('O que você quer fazer diferente na próxima semana?', data.nextWeek)}
-            </div>
-
-            <div style="margin-top: 28px; padding-top: 14px; border-top: 1px solid rgba(195,138,107,0.35); font-size: 13px; color: rgba(74,47,38,.82);">
-              <strong style="color: #C38A6B;">Ao finalizar, gere o PDF e envie para sua terapeuta.</strong><br><br>
-              Conteúdo didático exclusivo do processo terapêutico<br>
-              Psicoterapeuta Cleo Martins
-            </div>
-          </div>
-        </div>
-      `;
-
-      document.body.appendChild(printArea);
-
-      try {
-        const canvas = await html2canvas(printArea, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff'
-        });
-
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 10;
-        const usableWidth = pageWidth - margin * 2;
-        const usableHeight = pageHeight - margin * 2;
-        const imgWidth = usableWidth;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        const imgData = canvas.toDataURL('image/png');
-
-        let heightLeft = imgHeight;
-        let y = margin;
-
-        pdf.addImage(imgData, 'PNG', margin, y, imgWidth, imgHeight);
-        heightLeft -= usableHeight;
-
-        while (heightLeft > 0) {
-          pdf.addPage();
-          y = margin - (imgHeight - heightLeft);
-          pdf.addImage(imgData, 'PNG', margin, y, imgWidth, imgHeight);
-          heightLeft -= usableHeight;
-        }
-
-        pdf.save('checklist-semanal.pdf');
-      } catch (error) {
-        console.error('Erro ao gerar PDF:', error);
-        alert('Ocorreu um erro ao gerar o PDF. Tente novamente.');
-      } finally {
-        document.body.removeChild(printArea);
-        pdfBtn.textContent = originalBtnText;
-        pdfBtn.disabled = false;
-      }
+    function pdfValue(value) {
+      return value && String(value).trim() ? String(value).trim() : 'Não informado';
     }
 
+    function addWrappedText(text, x, yPos, maxWidth, lineHeight = 5.6) {
+      const lines = pdf.splitTextToSize(String(text), maxWidth);
+      pdf.text(lines, x, yPos);
+      return yPos + (lines.length * lineHeight);
+    }
+
+    function ensurePageSpace(currentY, neededHeight) {
+      const usableBottom = pageHeight - bottomMargin;
+      if (currentY + neededHeight > usableBottom) {
+        pdf.addPage();
+        return topMargin;
+      }
+      return currentY;
+    }
+
+    function drawSection(sectionTitle, items, currentY) {
+      const estimatedHeight = 16 + items.reduce((sum, item) => {
+        const labelLines = pdf.splitTextToSize(item.label, contentWidth).length;
+        const valueLines = pdf.splitTextToSize(item.value, contentWidth).length;
+        return sum + (labelLines * 5) + (valueLines * 5.6) + 8;
+      }, 0);
+
+      currentY = ensurePageSpace(currentY, Math.min(estimatedHeight, pageHeight - topMargin - bottomMargin));
+
+      pdf.setFont('times', 'bold');
+      pdf.setFontSize(17);
+      pdf.setTextColor(74, 47, 38);
+      pdf.text(sectionTitle, margin + 6, currentY);
+
+      pdf.setDrawColor(195, 138, 107);
+      pdf.setLineWidth(0.8);
+      pdf.line(margin, currentY - 4.5, margin, currentY + 2.5);
+
+      currentY += 10;
+
+      items.forEach((item) => {
+        const labelLines = pdf.splitTextToSize(item.label, contentWidth).length;
+        const valueLines = pdf.splitTextToSize(item.value, contentWidth).length;
+        const blockHeight = (labelLines * 5) + (valueLines * 5.6) + 8;
+
+        currentY = ensurePageSpace(currentY, blockHeight);
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(11.2);
+        pdf.setTextColor(74, 47, 38);
+        currentY = addWrappedText(item.label, margin, currentY, contentWidth, 5);
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(11);
+        pdf.setTextColor(92, 77, 70);
+        currentY = addWrappedText(item.value, margin, currentY + 0.8, contentWidth, 5.6);
+
+        currentY += 3;
+      });
+
+      return currentY + 3;
+    }
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(195, 138, 107);
+    pdf.setFontSize(10);
+    pdf.text('CHECKLIST SEMANAL', margin, y);
+    y += 10;
+
+    pdf.setTextColor(74, 47, 38);
+    pdf.setFont('times', 'bold');
+    pdf.setFontSize(24);
+    pdf.text('Controle e consciência', margin, y);
+    y += 8;
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(13);
+    pdf.text('Pra você se observar com sinceridade', margin, y);
+    y += 10;
+
+    pdf.setDrawColor(235, 229, 221);
+    pdf.setFillColor(247, 244, 239);
+    pdf.roundedRect(margin, y, contentWidth, 17, 3, 3, 'FD');
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.setTextColor(74, 47, 38);
+    pdf.text(`Nome: ${pdfValue(data.clientName)}`, margin + 4, y + 6.5);
+    pdf.text(`Data: ${pdfValue(data.fillDate)}`, margin + 4, y + 12.5);
+    y += 26;
+
+    y = drawSection('1. Comportamento na semana', [
+      { label: 'Você acessou pornografia?', value: pdfValue(data.pornSeen) },
+      ...(data.pornTimes && String(data.pornTimes).trim()
+        ? [{ label: 'Se sim, quantas vezes?', value: pdfValue(data.pornTimes) }]
+        : []),
+      { label: 'Quando a vontade veio, você conseguiu pausar?', value: pdfValue(data.heldUrge) },
+      { label: 'Teve momentos de autotoque?', value: pdfValue(data.selfTouch) },
+      { label: 'Foi uma escolha consciente ou no automático?', value: pdfValue(data.touchMode) },
+      { label: 'Conseguiu ficar alguns dias sem?', value: pdfValue(data.daysWithout) }
+    ], y);
+
+    y = drawSection('2. Ambiente', [
+      { label: 'Você bloqueou conteúdos que te estimulam?', value: pdfValue(data.blockedContent) },
+      { label: 'Evitou redes sociais com conteúdo sexualizado?', value: pdfValue(data.avoidedSocial) },
+      { label: 'Usou celular na cama?', value: pdfValue(data.phoneInBed) }
+    ], y);
+
+    y = drawSection('3. Corpo', [
+      { label: 'Banho frio ou final frio', value: pdfValue(data.coldShower) },
+      { label: 'Movimento físico', value: pdfValue(data.movement) }
+    ], y);
+
+    y = drawSection('4. Quando veio a vontade', [
+      { label: 'Quantas vezes sentiu vontade de assistir pornografia?', value: pdfValue(data.strongUrges) },
+      { label: 'Em quantas você conseguiu parar antes de agir?', value: pdfValue(data.pausedBeforeActing) },
+      { label: 'Você aplicou alguma técnica nesses momentos?', value: pdfValue(data.techniques) },
+      { label: 'Como lidou com o olhar e pensamentos ao ver mulheres na rua?', value: pdfValue(data.streetTrigger) },
+      { label: 'O que você fez nessas horas?', value: pdfValue(data.whatDidYouDo) }
+    ], y);
+
+    y = drawSection('5. Seu estado emocional', [
+      { label: 'Como você estava antes da vontade?', value: pdfValue(data.beforeFeeling) },
+      ...(data.beforeFeelingOther && String(data.beforeFeelingOther).trim()
+        ? [{ label: 'Se marcou outro, qual?', value: pdfValue(data.beforeFeelingOther) }]
+        : []),
+      { label: 'Como você se sentiu depois?', value: pdfValue(data.afterFeeling) }
+    ], y);
+
+    y = drawSection('6. Reflexão da semana', [
+      { label: 'Que nota você dá pra sua semana?', value: pdfValue(data.weekScore) },
+      { label: 'O que você fez bem?', value: pdfValue(data.didWell) },
+      { label: 'Onde você cedeu?', value: pdfValue(data.slipped) },
+      { label: 'O que você quer fazer diferente na próxima semana?', value: pdfValue(data.nextWeek) }
+    ], y);
+
+    y = ensurePageSpace(y, 24);
+    pdf.setDrawColor(74, 47, 38);
+    pdf.setLineWidth(0.2);
+    pdf.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.setTextColor(195, 138, 107);
+    pdf.text('Controle não é não sentir vontade. É não ser controlado por ela.', pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    pdf.text('Ao finalizar, gere o PDF e envie para sua terapeuta.', pageWidth / 2, y, { align: 'center' });
+    y += 10;
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9.5);
+    pdf.setTextColor(120, 112, 106);
+    pdf.text('Documento para uso terapêutico exclusivo · Psicoterapeuta Cleo Martins', pageWidth / 2, y, { align: 'center' });
+
+    const fileNameBase = (data.clientName && data.clientName.trim())
+      ? data.clientName.trim().replace(/\s+/g, '_')
+      : 'paciente';
+
+    pdf.save(`checklist-semanal_${fileNameBase}.pdf`);
+  } catch (err) {
+    console.error('Erro PDF:', err);
+    alert('Erro ao gerar PDF. Tente novamente.');
+  } finally {
+    pdfBtn.textContent = originalBtnText;
+    pdfBtn.disabled = false;
+  }
+}
+    // Inicialização
     loadForm();
   </script>
 </body>
