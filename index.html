@@ -638,7 +638,7 @@
         </div>
 
         <div class="field">
-          <label class="label" for="slipped">Onde você falhou? <span class="required-mark">*</span></label>
+          <label class="label" for="slipped">Onde você vacilou? <span class="required-mark">*</span></label>
           <textarea id="slipped" name="slipped" placeholder="Escreva do seu jeito." data-track="true"></textarea>
         </div>
 
@@ -676,6 +676,7 @@
     const printBtn = document.getElementById('printBtn');
     const pdfBtn = document.getElementById('pdfBtn');
 
+    // Lista exata de campos obrigatórios conforme solicitado
     const requiredNames = [
       'clientName', 'fillDate', 'pornSeen', 'heldUrge', 'selfTouch', 'touchMode', 'daysWithout',
       'blockedContent', 'avoidedSocial', 'phoneInBed', 'coldShower', 'movement', 'strongUrges',
@@ -683,6 +684,7 @@
       'afterFeeling', 'weekScore', 'didWell', 'slipped', 'nextWeek'
     ];
 
+    // Event Listeners
     form.addEventListener('input', saveForm);
     form.addEventListener('change', saveForm);
     window.addEventListener('beforeunload', saveForm);
@@ -795,10 +797,11 @@
       const data = getFormData();
       const printArea = document.createElement('div');
       
+      // Estilização do container de captura (off-screen)
       printArea.style.position = 'fixed';
       printArea.style.left = '-9999px';
       printArea.style.top = '0';
-      printArea.style.width = '794px';
+      printArea.style.width = '794px'; // Largura A4 aprox em px
       printArea.style.padding = '40px';
       printArea.style.background = '#ffffff';
       printArea.style.color = '#4A2F26';
@@ -844,17 +847,16 @@
 
             <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">5. Estado Emocional</h3>
             ${formatAnswer('Sentimento antes da vontade:', data.beforeFeeling)}
-            ${data.beforeFeelingOther && data.beforeFeelingOther.trim() !== '' ? formatAnswer('Outro sentimento:', data.beforeFeelingOther) : ''}
+            ${formatAnswer('Outro sentimento:', data.beforeFeelingOther)}
             ${formatAnswer('Sentimento depois:', data.afterFeeling)}
 
             <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">6. Visão Geral</h3>
             ${formatAnswer('Nota da semana:', data.weekScore)}
             ${formatAnswer('O que fez bem:', data.didWell)}
-            ${formatAnswer('Onde falhou:', data.slipped)}
-            ${formatAnswer('O que você quer fazer diferente na próxima semana:', data.nextWeek)}
+            ${formatAnswer('Onde vacilou:', data.slipped)}
+            ${formatAnswer('Diferente para a próxima semana:', data.nextWeek)}
 
-            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(74,47,38,0.14); font-size: 12px; text-align: center; color: #888;">
-              <strong style="color: #C38A6B;">Ao finalizar, gere o PDF e envie para sua terapeuta.</strong><br><br>
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #line; font-size: 12px; text-align: center; color: #888;">
               Documento gerado para fins terapêuticos exclusivo - Psicoterapeuta Cleo Martins
             </div>
           </div>
@@ -886,9 +888,11 @@
         let heightLeft = imgHeight;
         let yPosition = margin;
 
+        // Primeira página
         pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
         heightLeft -= usableHeight;
 
+        // Páginas subsequentes se necessário
         while (heightLeft > 0) {
           pdf.addPage();
           yPosition = margin - (imgHeight - heightLeft);
@@ -906,6 +910,9 @@
         pdfBtn.disabled = false;
       }
     }
+
+    // Inicialização
+    loadForm();
   </script>
 </body>
 </html>
