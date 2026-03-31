@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checklist semanal — Controle e consciência</title>
+  <meta name="description" content="Checklist semanal terapêutico para controle e consciência." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #F7F4EF;
+      --text: #4A2F26;
+      --accent: #C38A6B;
+      --line: rgba(74, 47, 38, 0.14);
+      --soft: rgba(195, 138, 107, 0.10);
+      --button-text: #F7F4EF;
+      --white: #fffdfa;
+      --radius: 18px;
+      --shadow: 0 6px 20px rgba(74, 47, 38, 0.05);
+      --max: 820px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Montserrat", sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .page {
+      width: min(100% - 28px, var(--max));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(10px);
+      background: rgba(247, 244, 239, 0.9);
+      border-bottom: 1px solid var(--line);
+      margin: 0 -14px 24px;
+      padding: 14px;
+    }
+
+    .progress-wrap {
+      width: min(100%, var(--max));
+      margin: 0 auto;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.92rem;
+      margin-bottom: 8px;
+      color: rgba(74, 47, 38, 0.82);
+    }
+
+    .progress {
+      height: 10px;
+      background: rgba(74, 47, 38, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--text));
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    header {
+      padding: 14px 0 8px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(74, 47, 38, 0.72);
+      margin-bottom: 8px;
+    }
+
+    h1, h2, h3 {
+      font-family: "Playfair Display", serif;
+      color: var(--text);
+      line-height: 1.2;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 1.08rem;
+      font-weight: 600;
+      margin: 0 0 10px;
+    }
+
+    .intro {
+      font-size: 1rem;
+      max-width: 62ch;
+      margin: 0;
+      color: rgba(74, 47, 38, 0.86);
+    }
+
+    form {
+      margin-top: 24px;
+    }
+
+    .date-block,
+    .section,
+    .support,
+    .actions {
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 250, 0.68);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .date-block,
+    .support,
+    .actions {
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .section {
+      padding: 22px 18px;
+      margin-bottom: 18px;
+    }
+
+    .section + .section {
+      margin-top: 0;
+    }
+
+    .section-head {
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-title {
+      font-size: clamp(1.35rem, 2.8vw, 1.8rem);
+      margin-bottom: 4px;
+    }
+
+    .section-note {
+      margin: 0;
+      color: rgba(74, 47, 38, 0.78);
+      font-size: 0.97rem;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    .required-mark {
+      color: var(--accent);
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    .top-note {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(195, 138, 107, 0.24);
+      background: rgba(195, 138, 107, 0.08);
+      border-radius: 14px;
+      font-size: 0.93rem;
+      color: rgba(74, 47, 38, 0.86);
+    }
+
+    label.label,
+    .field legend {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 0.98rem;
+      padding: 0;
+    }
+
+    fieldset {
+      border: 0;
+      margin: 0;
+      padding: 0;
+      min-inline-size: auto;
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--white);
+    }
+
+    .option input[type="radio"],
+    .option input[type="checkbox"] {
+      accent-color: var(--text);
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .inline-group {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid rgba(74, 47, 38, 0.18);
+      background: var(--white);
+      border-radius: 14px;
+      padding: 14px 14px;
+      color: var(--text);
+      font: inherit;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(195, 138, 107, 0.12);
+    }
+
+    .hint {
+      display: block;
+      margin-top: 6px;
+      font-size: 0.9rem;
+      color: rgba(74, 47, 38, 0.72);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .actions-left,
+    .actions-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 18px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.2s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: var(--text);
+      color: var(--button-text);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid rgba(74, 47, 38, 0.2);
+    }
+
+    .support {
+      border-left: 3px solid var(--accent);
+    }
+
+    .support p {
+      margin: 0;
+      font-size: 0.98rem;
+    }
+
+    .footer-space {
+      height: 24px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (min-width: 760px) {
+      .inline-group {
+        grid-template-columns: 1fr 180px;
+        align-items: end;
+      }
+
+      .two-col {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .section,
+      .date-block,
+      .support,
+      .actions {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+    }
+
+    @media print {
+      .topbar,
+      .actions,
+      .no-print {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+      }
+
+      .page {
+        width: 100%;
+        padding: 0;
+      }
+
+      .section,
+      .date-block,
+      .support {
+        box-shadow: none;
+        background: white;
+        border: 1px solid #ddd;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar no-print">
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span>Preenchimento</span>
+        <strong id="progressText">0%</strong>
+      </div>
+      <div class="progress" aria-hidden="true">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <main class="page" id="captureArea">
+    <header>
+      <span class="eyebrow">Checklist semanal</span>
+      <h1>Controle e consciência</h1>
+      <p class="subtitle">Pra você se observar com sinceridade</p>
+      <p class="intro">Este preenchimento é para te ajudar a enxergar com mais clareza como foi a sua semana. Não é para agradar ninguém. É para você se observar com sinceridade.</p>
+      <div class="top-note">Preencha tudo com sinceridade. A cada novo preenchimento, apague as informações anteriores antes de começar.</div>
+    </header>
+
+    <form id="weeklyForm">
+      <section class="date-block">
+        <div class="two-col">
+          <div class="field">
+            <label class="label" for="clientName">Seu nome <span class="required-mark">*</span></label>
+            <input type="text" id="clientName" name="clientName" placeholder="Seu nome" data-track="true" />
+          </div>
+          <div class="field">
+            <label class="label" for="fillDate">Data do preenchimento <span class="required-mark">*</span></label>
+            <input type="date" id="fillDate" name="fillDate" data-track="true" />
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">1. Seu comportamento na semana</h2>
+          <p class="section-note">Não é pra me agradar. É pra você entender o que está acontecendo com você.</p>
+        </div>
+
+        <div class="field">
+          <fieldset data-track="true">
+            <legend>Você viu pornografia? <span class="required-mark">*</span></legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="pornSeen" value="Não" /> <span>Não</span></label>
+              <label class="option"><input type="radio" name="pornSeen" value="Sim" /> <span>Sim</span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="field">
+          <label class="label" for="pornTimes">Se sim, quantas vezes?</label>
+          <input type="number" min="0" id="pornTimes" name="pornTimes" placeholder="Ex.: 1" data-track="true" />
+        </div>
+
+        <div class="field">
+          <fieldset data-track="true">
+            <legend>Sobre o seu corpo (sem pornografia): você teve vontade e conseguiu segurar algumas vezes? <span class="required-mark">*</span></legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="heldUrge" value="Sim" /> <span>Sim</span></label>
+              <label class="option"><input type="radio" name="heldUrge" value="Não" /> <span>Não</span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="field">
+          <fieldset data-track="true">
+            <legend>Teve momentos que você se tocou? <span class="required-mark">*</span></legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="selfTouch" value="Sim" /> <span>Sim</span></label>
+              <label class="option"><input type="radio" name="selfTouch" value="Não" /> <span>Não</span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="field">
+          <fieldset data-track="true">
+            <legend>Foi mais por escolha ou no automático? <span class="required-mark">*</span></legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="touchMode" value="Escolha" /> <span>Escolha</span></label>
+              <label class="option"><input type="radio" name="touchMode" value="Automático" /> <span>No automático</span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="field">
+          <fieldset data-track="true">
+            <legend>Conseguiu ficar alguns dias sem fazer? <span class="required-mark">*</span></legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="daysWithout" value="Sim" /> <span>Sim</span></label>
+              <label class="option"><input type="radio" name="daysWithout" value="Não" /> <span>Não</span></label>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">2. Seu ambiente</h2>
+          <p class="section-note">Essa parte é muito importante. O ambiente pode ajudar ou atrapalhar você.</p>
+        </div>
+
+        <div class="field">
+          <fieldset data-track="true">
+            <legend>Você bloqueou ou evitou conteúdos que te estimulam? <span class="required-mark">*</span></legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="blockedContent" value="Sim" /> <span>Sim</span></label>
+              <label class="option"><input type="radio" name="blockedContent" value="Não" /> <span>Não</span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="field">
+          <fieldset data-track="true">
+            <legend>Evitou redes sociais com conteúdo sexual? <span class="required-mark">*</span></legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="avoidedSocial" value="Sim" /> <span>Sim</span></label>
+              <label class="option"><input type="radio" name="avoidedSocial" value="Não" /> <span>Não</span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="field">
+          <fieldset data-track="true">
+            <legend>Usou celular na cama? <span class="required-mark">*</span></legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="phoneInBed" value="Não" /> <span>Não</span></label>
+              <label class="option"><input type="radio" name="phoneInBed" value="Sim" /> <span>Sim</span></label>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">3. Seu corpo</h2>
+          <p class="section-note">Disciplina também é cuidado com o corpo.</p>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <fieldset data-track="true">
+              <legend>Banho frio ou final frio <span class="required-mark">*</span></legend>
+              <div class="options">
+                <label class="option"><input type="radio" name="coldShower" value="Fiz 5 vezes ou mais" /> <span>Fiz 5 vezes ou mais</span></label>
+                <label class="option"><input type="radio" name="coldShower" value="Fiz menos que 5" /> <span>Fiz menos que 5</span></label>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="field">
+            <fieldset data-track="true">
+              <legend>Movimento físico (caminhada, exercício, etc.) <span class="required-mark">*</span></legend>
+              <div class="options">
+                <label class="option"><input type="radio" name="movement" value="Fiz 4 vezes ou mais" /> <span>Fiz 4 vezes ou mais</span></label>
+                <label class="option"><input type="radio" name="movement" value="Fiz menos que 4" /> <span>Fiz menos que 4</span></label>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">4. Quando veio a vontade</h2>
+          <p class="section-note">Aqui você observa com clareza quando surgiu vontade de acessar pornografia.</p>
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label class="label" for="strongUrges">Quantas vezes sentiu vontade de assistir pornografia? <span class="required-mark">*</span></label>
+            <input type="number" min="0" id="strongUrges" name="strongUrges" placeholder="Ex.: 3" data-track="true" />
+          </div>
+
+          <div class="field">
+            <label class="label" for="pausedBeforeActing">Em quantas você conseguiu parar antes de agir? <span class="required-mark">*</span></label>
+            <input type="number" min="0" id="pausedBeforeActing" name="pausedBeforeActing" placeholder="Ex.: 1" data-track="true" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="techniques">Você aplicou alguma técnica nesses momentos? <span class="required-mark">*</span></label>
+          <textarea id="techniques" name="techniques" placeholder="Ex.: respiração, banho frio, caminhada" data-track="true"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="label" for="streetTrigger">Quando viu mulheres na rua, conseguiu controlar o olhar e os pensamentos? <span class="required-mark">*</span></label>
+          <select id="streetTrigger" name="streetTrigger" data-track="true">
+            <option value="">Selecione</option>
+            <option value="Sim">Sim</option>
+            <option value="Parcialmente">Parcialmente</option>
+            <option value="Não">Não</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="label" for="whatDidYouDo">O que você fez nessas horas? <span class="required-mark">*</span></label>
+          <textarea id="whatDidYouDo" name="whatDidYouDo" placeholder="Escreva de forma simples." data-track="true"></textarea>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">5. Como você estava se sentindo</h2>
+          <p class="section-note">Essa parte ajuda a ligar comportamento com emoção.</p>
+        </div>
+
+        <div class="field">
+          <fieldset data-track="true">
+            <legend>Antes da vontade, você estava mais: <span class="required-mark">*</span></legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="beforeFeeling" value="ansioso" /> <span>Ansioso</span></label>
+              <label class="option"><input type="radio" name="beforeFeeling" value="entediado" /> <span>Entediado</span></label>
+              <label class="option"><input type="radio" name="beforeFeeling" value="sozinho" /> <span>Sozinho</span></label>
+              <label class="option"><input type="radio" name="beforeFeeling" value="frustrado" /> <span>Frustrado</span></label>
+              <label class="option"><input type="radio" name="beforeFeeling" value="outro" /> <span>Outro</span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="field">
+          <label class="label" for="beforeFeelingOther">Se marcou outro, qual?</label>
+          <input type="text" id="beforeFeelingOther" name="beforeFeelingOther" placeholder="Ex.: cansado" data-track="true" />
+        </div>
+
+        <div class="field">
+          <fieldset data-track="true">
+            <legend>Depois, você se sentiu: <span class="required-mark">*</span></legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="afterFeeling" value="melhor" /> <span>Melhor</span></label>
+              <label class="option"><input type="radio" name="afterFeeling" value="igual" /> <span>Igual</span></label>
+              <label class="option"><input type="radio" name="afterFeeling" value="pior" /> <span>Pior</span></label>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">6. Sua visão da semana</h2>
+          <p class="section-note">Mais importante do que perfeição é honestidade.</p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="weekScore">Que nota você dá pra sua semana? (0 a 10) <span class="required-mark">*</span></label>
+          <input type="number" min="0" max="10" id="weekScore" name="weekScore" placeholder="Ex.: 7" data-track="true" />
+        </div>
+
+        <div class="field">
+          <label class="label" for="didWell">O que você fez bem? <span class="required-mark">*</span></label>
+          <textarea id="didWell" name="didWell" placeholder="Escreva do seu jeito." data-track="true"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="label" for="slipped">Onde você vacilou? <span class="required-mark">*</span></label>
+          <textarea id="slipped" name="slipped" placeholder="Escreva do seu jeito." data-track="true"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="label" for="nextWeek">O que você quer fazer diferente na próxima semana? <span class="required-mark">*</span></label>
+          <textarea id="nextWeek" name="nextWeek" placeholder="Escreva de forma simples." data-track="true"></textarea>
+        </div>
+      </section>
+
+      <section class="actions no-print">
+        <div class="actions-left">
+          <button type="button" class="btn-primary" id="pdfBtn">Exportar PDF</button>
+          <button type="button" class="btn-secondary" id="printBtn">Imprimir</button>
+        </div>
+      </section>
+
+      <section class="support">
+        <p>Mais importante do que acertar tudo é ser sincero. Quando você percebe seu padrão com clareza, começa a ter escolha.</p>
+        <p style="margin-top:10px; font-size:0.92rem; color:rgba(74,47,38,0.82);">Ao finalizar, gere o PDF e envie para sua terapeuta.</p>
+        <div style="margin-top:14px; border-top:1px solid rgba(195,138,107,0.3); padding-top:10px; font-size:0.9rem; color:rgba(74,47,38,0.8);">
+          Conteúdo didático exclusivo do processo terapêutico<br>
+          Psicoterapeuta Cleo Martins
+        </div>
+      </section>
+    </form>
+
+    <div class="footer-space"></div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'checklist-terapeutico-semanal';
+    const form = document.getElementById('weeklyForm');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const printBtn = document.getElementById('printBtn');
+    const pdfBtn = document.getElementById('pdfBtn');
+
+    const requiredNames = [
+      'clientName', 'fillDate', 'pornSeen', 'heldUrge', 'selfTouch', 'touchMode', 'daysWithout',
+      'blockedContent', 'avoidedSocial', 'phoneInBed', 'coldShower', 'movement', 'strongUrges',
+      'pausedBeforeActing', 'techniques', 'streetTrigger', 'whatDidYouDo', 'beforeFeeling',
+      'afterFeeling', 'weekScore', 'didWell', 'slipped', 'nextWeek'
+    ];
+
+    form.addEventListener('input', saveForm);
+    form.addEventListener('change', saveForm);
+    window.addEventListener('beforeunload', saveForm);
+    document.addEventListener('DOMContentLoaded', loadForm);
+    printBtn.addEventListener('click', () => window.print());
+    pdfBtn.addEventListener('click', exportPDF);
+
+    function getFormData() {
+      const data = {};
+      const elements = form.querySelectorAll('input, textarea, select');
+      elements.forEach((el) => {
+        if (!el.name) return;
+        if (el.type === 'radio') {
+          if (el.checked) data[el.name] = el.value;
+        } else {
+          data[el.name] = el.value;
+        }
+      });
+      return data;
+    }
+
+    function saveForm() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getFormData()));
+      updateProgress();
+    }
+
+    function loadForm() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const today = new Date().toISOString().split('T')[0];
+      const dateField = document.getElementById('fillDate');
+
+      if (!raw) {
+        if (dateField && !dateField.value) dateField.value = today;
+        updateProgress();
+        return;
+      }
+
+      try {
+        const data = JSON.parse(raw);
+        const elements = form.querySelectorAll('input, textarea, select');
+        elements.forEach((el) => {
+          if (!el.name || !(el.name in data)) return;
+          if (el.type === 'radio') {
+            el.checked = el.value === data[el.name];
+          } else {
+            el.value = data[el.name];
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao carregar dados salvos:', error);
+      }
+
+      if (dateField && !dateField.value) dateField.value = today;
+      updateProgress();
+    }
+
+    function isAnswered(name) {
+      const group = form.querySelectorAll(`[name="${name}"]`);
+      if (!group.length) return false;
+
+      const first = group[0];
+      if (first.type === 'radio') {
+        return Array.from(group).some((radio) => radio.checked);
+      }
+
+      return String(first.value || '').trim() !== '';
+    }
+
+    function updateProgress() {
+      const answered = requiredNames.filter(isAnswered).length;
+      const percent = requiredNames.length
+        ? Math.round((answered / requiredNames.length) * 100)
+        : 0;
+
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${percent}%`;
+    }
+
+    function validateForm() {
+      return requiredNames.every(isAnswered);
+    }
+
+    function formatAnswer(label, value) {
+      const safeValue = value && String(value).trim()
+        ? String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br>')
+        : 'Não preenchido';
+
+      return `
+        <div style="margin: 0 0 14px;">
+          <div style="font-weight: 600; margin-bottom: 4px;">${label}</div>
+          <div style="color: #4A2F26; line-height: 1.6;">${safeValue}</div>
+        </div>
+      `;
+    }
+
+    async function exportPDF() {
+      if (!validateForm()) {
+        alert('Por favor, preencha todos os campos obrigatórios antes de gerar o PDF.');
+        return;
+      }
+
+      const originalBtnText = pdfBtn.textContent;
+      pdfBtn.textContent = 'Gerando PDF...';
+      pdfBtn.disabled = true;
+
+      const data = getFormData();
+      const printArea = document.createElement('div');
+      
+      printArea.style.position = 'fixed';
+      printArea.style.left = '-9999px';
+      printArea.style.top = '0';
+      printArea.style.width = '794px';
+      printArea.style.padding = '40px';
+      printArea.style.background = '#ffffff';
+      printArea.style.color = '#4A2F26';
+      printArea.style.fontFamily = 'Montserrat, sans-serif';
+      printArea.style.boxSizing = 'border-box';
+
+      printArea.innerHTML = `
+        <div style="max-width: 714px; margin: 0 auto;">
+          <div style="border-bottom: 2px solid #C38A6B; padding-bottom: 16px; margin-bottom: 24px;">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #C38A6B; margin-bottom: 8px;">Checklist semanal</div>
+            <div style="font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; margin-bottom: 4px;">Controle e consciência</div>
+            <div style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">Pra você se observar com sinceridade</div>
+            <div style="font-size: 14px; background: #F7F4EF; padding: 12px; border-radius: 8px;">
+              <strong>Paciente:</strong> ${data.clientName}<br>
+              <strong>Data:</strong> ${data.fillDate}
+            </div>
+          </div>
+
+          <div style="font-size: 14px;">
+            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">1. Comportamento na semana</h3>
+            ${formatAnswer('Viu pornografia?', data.pornSeen)}
+            ${formatAnswer('Quantidade de vezes (se sim):', data.pornTimes)}
+            ${formatAnswer('Conseguiu segurar a vontade?', data.heldUrge)}
+            ${formatAnswer('Se tocou?', data.selfTouch)}
+            ${formatAnswer('Escolha ou automático?', data.touchMode)}
+            ${formatAnswer('Dias sem fazer:', data.daysWithout)}
+
+            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">2. Ambiente</h3>
+            ${formatAnswer('Bloqueou conteúdos estimulantes?', data.blockedContent)}
+            ${formatAnswer('Evitou redes sociais sexuais?', data.avoidedSocial)}
+            ${formatAnswer('Celular na cama?', data.phoneInBed)}
+
+            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">3. Corpo</h3>
+            ${formatAnswer('Banho frio:', data.coldShower)}
+            ${formatAnswer('Movimento físico:', data.movement)}
+
+            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">4. Gestão da Vontade</h3>
+            ${formatAnswer('Vezes que sentiu vontade:', data.strongUrges)}
+            ${formatAnswer('Vezes que conseguiu parar:', data.pausedBeforeActing)}
+            ${formatAnswer('Técnicas aplicadas:', data.techniques)}
+            ${formatAnswer('Controle do olhar/pensamentos na rua:', data.streetTrigger)}
+            ${formatAnswer('O que fez nessas horas?', data.whatDidYouDo)}
+
+            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">5. Estado Emocional</h3>
+            ${formatAnswer('Sentimento antes da vontade:', data.beforeFeeling)}
+            ${data.beforeFeelingOther && data.beforeFeelingOther.trim() !== '' ? formatAnswer('Outro sentimento:', data.beforeFeelingOther) : ''}
+            ${formatAnswer('Sentimento depois:', data.afterFeeling)}
+
+            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">6. Visão Geral</h3>
+            ${formatAnswer('Nota da semana:', data.weekScore)}
+            ${formatAnswer('O que fez bem:', data.didWell)}
+            ${formatAnswer('Onde vacilou:', data.slipped)}
+            ${formatAnswer('Diferente para a próxima semana:', data.nextWeek)}
+
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(74,47,38,0.14); font-size: 12px; text-align: center; color: #888;">
+              <strong style="color: #C38A6B;">Ao finalizar, gere o PDF e envie para sua terapeuta.</strong><br><br>
+              Documento gerado para fins terapêuticos exclusivo - Psicoterapeuta Cleo Martins
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(printArea);
+
+      try {
+        const canvas = await html2canvas(printArea, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 10;
+        const usableWidth = pageWidth - (margin * 2);
+        const usableHeight = pageHeight - (margin * 2);
+        
+        const imgWidth = usableWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const imgData = canvas.toDataURL('image/png');
+
+        let heightLeft = imgHeight;
+        let yPosition = margin;
+
+        pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
+        heightLeft -= usableHeight;
+
+        while (heightLeft > 0) {
+          pdf.addPage();
+          yPosition = margin - (imgHeight - heightLeft);
+          pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
+          heightLeft -= usableHeight;
+        }
+
+        pdf.save(`Checklist_Semanal_${data.clientName.replace(/\s+/g, '_')}.pdf`);
+      } catch (err) {
+        console.error('Erro PDF:', err);
+        alert('Erro ao gerar PDF. Tente usar o botão Imprimir e Salvar como PDF.');
+      } finally {
+        document.body.removeChild(printArea);
+        pdfBtn.textContent = originalBtnText;
+        pdfBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
