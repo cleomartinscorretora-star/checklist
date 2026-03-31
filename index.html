@@ -668,251 +668,305 @@
     <div class="footer-space"></div>
   </main>
 
-  <script>
-    const STORAGE_KEY = 'checklist-terapeutico-semanal';
-    const form = document.getElementById('weeklyForm');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    const printBtn = document.getElementById('printBtn');
-    const pdfBtn = document.getElementById('pdfBtn');
+<script>
+  const STORAGE_KEY = 'checklist-terapeutico-semanal';
+  const form = document.getElementById('weeklyForm');
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  const printBtn = document.getElementById('printBtn');
+  const pdfBtn = document.getElementById('pdfBtn');
 
-    // Lista exata de campos obrigatórios conforme solicitado
-    const requiredNames = [
-      'clientName', 'fillDate', 'pornSeen', 'heldUrge', 'selfTouch', 'touchMode', 'daysWithout',
-      'blockedContent', 'avoidedSocial', 'phoneInBed', 'coldShower', 'movement', 'strongUrges',
-      'pausedBeforeActing', 'techniques', 'streetTrigger', 'whatDidYouDo', 'beforeFeeling',
-      'afterFeeling', 'weekScore', 'didWell', 'slipped', 'nextWeek'
-    ];
+  const requiredNames = [
+    'clientName', 'fillDate', 'pornSeen', 'heldUrge', 'selfTouch', 'touchMode', 'daysWithout',
+    'blockedContent', 'avoidedSocial', 'phoneInBed', 'coldShower', 'movement', 'strongUrges',
+    'pausedBeforeActing', 'techniques', 'streetTrigger', 'whatDidYouDo', 'beforeFeeling',
+    'afterFeeling', 'weekScore', 'didWell', 'slipped', 'nextWeek'
+  ];
 
-    // Event Listeners
-    form.addEventListener('input', saveForm);
-    form.addEventListener('change', saveForm);
-    window.addEventListener('beforeunload', saveForm);
-    document.addEventListener('DOMContentLoaded', loadForm);
-    printBtn.addEventListener('click', () => window.print());
-    pdfBtn.addEventListener('click', exportPDF);
+  form.addEventListener('input', saveForm);
+  form.addEventListener('change', saveForm);
+  window.addEventListener('beforeunload', saveForm);
+  document.addEventListener('DOMContentLoaded', loadForm);
+  printBtn.addEventListener('click', () => window.print());
+  pdfBtn.addEventListener('click', exportPDF);
 
-    function getFormData() {
-      const data = {};
-      const elements = form.querySelectorAll('input, textarea, select');
-      elements.forEach((el) => {
-        if (!el.name) return;
-        if (el.type === 'radio') {
-          if (el.checked) data[el.name] = el.value;
-        } else {
-          data[el.name] = el.value;
-        }
-      });
-      return data;
-    }
-
-    function saveForm() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(getFormData()));
-      updateProgress();
-    }
-
-    function loadForm() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const today = new Date().toISOString().split('T')[0];
-      const dateField = document.getElementById('fillDate');
-
-      if (!raw) {
-        if (dateField && !dateField.value) dateField.value = today;
-        updateProgress();
-        return;
+  function getFormData() {
+    const data = {};
+    const elements = form.querySelectorAll('input, textarea, select');
+    elements.forEach((el) => {
+      if (!el.name) return;
+      if (el.type === 'radio') {
+        if (el.checked) data[el.name] = el.value;
+      } else {
+        data[el.name] = el.value;
       }
+    });
+    return data;
+  }
 
-      try {
-        const data = JSON.parse(raw);
-        const elements = form.querySelectorAll('input, textarea, select');
-        elements.forEach((el) => {
-          if (!el.name || !(el.name in data)) return;
-          if (el.type === 'radio') {
-            el.checked = el.value === data[el.name];
-          } else {
-            el.value = data[el.name];
-          }
-        });
-      } catch (error) {
-        console.error('Erro ao carregar dados salvos:', error);
-      }
+  function saveForm() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(getFormData()));
+    updateProgress();
+  }
 
+  function loadForm() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const today = new Date().toISOString().split('T')[0];
+    const dateField = document.getElementById('fillDate');
+
+    if (!raw) {
       if (dateField && !dateField.value) dateField.value = today;
       updateProgress();
+      return;
     }
 
-    function isAnswered(name) {
-      const group = form.querySelectorAll(`[name="${name}"]`);
-      if (!group.length) return false;
-
-      const first = group[0];
-      if (first.type === 'radio') {
-        return Array.from(group).some((radio) => radio.checked);
-      }
-
-      return String(first.value || '').trim() !== '';
-    }
-
-    function updateProgress() {
-      const answered = requiredNames.filter(isAnswered).length;
-      const percent = requiredNames.length
-        ? Math.round((answered / requiredNames.length) * 100)
-        : 0;
-
-      progressBar.style.width = `${percent}%`;
-      progressText.textContent = `${percent}%`;
-    }
-
-    function validateForm() {
-      return requiredNames.every(isAnswered);
-    }
-
-    function formatAnswer(label, value) {
-      const safeValue = value && String(value).trim()
-        ? String(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/\n/g, '<br>')
-        : 'Não preenchido';
-
-      return `
-        <div style="margin: 0 0 14px;">
-          <div style="font-weight: 600; margin-bottom: 4px;">${label}</div>
-          <div style="color: #4A2F26; line-height: 1.6;">${safeValue}</div>
-        </div>
-      `;
-    }
-
-    async function exportPDF() {
-      if (!validateForm()) {
-        alert('Por favor, preencha todos os campos obrigatórios antes de gerar o PDF.');
-        return;
-      }
-
-      const originalBtnText = pdfBtn.textContent;
-      pdfBtn.textContent = 'Gerando PDF...';
-      pdfBtn.disabled = true;
-
-      const data = getFormData();
-      const printArea = document.createElement('div');
-      
-      // Estilização do container de captura (off-screen)
-      printArea.style.position = 'fixed';
-      printArea.style.left = '-9999px';
-      printArea.style.top = '0';
-      printArea.style.width = '794px'; // Largura A4 aprox em px
-      printArea.style.padding = '40px';
-      printArea.style.background = '#ffffff';
-      printArea.style.color = '#4A2F26';
-      printArea.style.fontFamily = 'Montserrat, sans-serif';
-      printArea.style.boxSizing = 'border-box';
-
-      printArea.innerHTML = `
-        <div style="max-width: 714px; margin: 0 auto;">
-          <div style="border-bottom: 2px solid #C38A6B; padding-bottom: 16px; margin-bottom: 24px;">
-            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #C38A6B; margin-bottom: 8px;">Checklist semanal</div>
-            <div style="font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; margin-bottom: 4px;">Controle e consciência</div>
-            <div style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">Pra você se observar com sinceridade</div>
-            <div style="font-size: 14px; background: #F7F4EF; padding: 12px; border-radius: 8px;">
-              <strong>Paciente:</strong> ${data.clientName}<br>
-              <strong>Data:</strong> ${data.fillDate}
-            </div>
-          </div>
-
-          <div style="font-size: 14px;">
-            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">1. Comportamento na semana</h3>
-            ${formatAnswer('Viu pornografia?', data.pornSeen)}
-            ${formatAnswer('Quantidade de vezes (se sim):', data.pornTimes)}
-            ${formatAnswer('Conseguiu segurar a vontade?', data.heldUrge)}
-            ${formatAnswer('Se tocou?', data.selfTouch)}
-            ${formatAnswer('Escolha ou automático?', data.touchMode)}
-            ${formatAnswer('Dias sem fazer:', data.daysWithout)}
-
-            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">2. Ambiente</h3>
-            ${formatAnswer('Bloqueou conteúdos estimulantes?', data.blockedContent)}
-            ${formatAnswer('Evitou redes sociais sexuais?', data.avoidedSocial)}
-            ${formatAnswer('Celular na cama?', data.phoneInBed)}
-
-            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">3. Corpo</h3>
-            ${formatAnswer('Banho frio:', data.coldShower)}
-            ${formatAnswer('Movimento físico:', data.movement)}
-
-            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">4. Gestão da Vontade</h3>
-            ${formatAnswer('Vezes que sentiu vontade:', data.strongUrges)}
-            ${formatAnswer('Vezes que conseguiu parar:', data.pausedBeforeActing)}
-            ${formatAnswer('Técnicas aplicadas:', data.techniques)}
-            ${formatAnswer('Controle do olhar/pensamentos na rua:', data.streetTrigger)}
-            ${formatAnswer('O que fez nessas horas?', data.whatDidYouDo)}
-
-            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">5. Estado Emocional</h3>
-            ${formatAnswer('Sentimento antes da vontade:', data.beforeFeeling)}
-            ${formatAnswer('Outro sentimento:', data.beforeFeelingOther)}
-            ${formatAnswer('Sentimento depois:', data.afterFeeling)}
-
-            <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; border-left: 4px solid #C38A6B; padding-left: 10px; margin: 24px 0 16px;">6. Visão Geral</h3>
-            ${formatAnswer('Nota da semana:', data.weekScore)}
-            ${formatAnswer('O que fez bem:', data.didWell)}
-            ${formatAnswer('Onde vacilou:', data.slipped)}
-            ${formatAnswer('Diferente para a próxima semana:', data.nextWeek)}
-
-            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #line; font-size: 12px; text-align: center; color: #888;">
-              Documento gerado para fins terapêuticos exclusivo - Psicoterapeuta Cleo Martins
-            </div>
-          </div>
-        </div>
-      `;
-
-      document.body.appendChild(printArea);
-
-      try {
-        const canvas = await html2canvas(printArea, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false
-        });
-
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 10;
-        const usableWidth = pageWidth - (margin * 2);
-        const usableHeight = pageHeight - (margin * 2);
-        
-        const imgWidth = usableWidth;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        const imgData = canvas.toDataURL('image/png');
-
-        let heightLeft = imgHeight;
-        let yPosition = margin;
-
-        // Primeira página
-        pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
-        heightLeft -= usableHeight;
-
-        // Páginas subsequentes se necessário
-        while (heightLeft > 0) {
-          pdf.addPage();
-          yPosition = margin - (imgHeight - heightLeft);
-          pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
-          heightLeft -= usableHeight;
+    try {
+      const data = JSON.parse(raw);
+      const elements = form.querySelectorAll('input, textarea, select');
+      elements.forEach((el) => {
+        if (!el.name || !(el.name in data)) return;
+        if (el.type === 'radio') {
+          el.checked = el.value === data[el.name];
+        } else {
+          el.value = data[el.name];
         }
-
-        pdf.save(`Checklist_Semanal_${data.clientName.replace(/\s+/g, '_')}.pdf`);
-      } catch (err) {
-        console.error('Erro PDF:', err);
-        alert('Erro ao gerar PDF. Tente usar o botão Imprimir e Salvar como PDF.');
-      } finally {
-        document.body.removeChild(printArea);
-        pdfBtn.textContent = originalBtnText;
-        pdfBtn.disabled = false;
-      }
+      });
+    } catch (error) {
+      console.error('Erro ao carregar dados salvos:', error);
     }
 
-    // Inicialização
-    loadForm();
-  </script>
+    if (dateField && !dateField.value) dateField.value = today;
+    updateProgress();
+  }
+
+  function isAnswered(name) {
+    const group = form.querySelectorAll(`[name="${name}"]`);
+    if (!group.length) return false;
+
+    const first = group[0];
+    if (first.type === 'radio') {
+      return Array.from(group).some((radio) => radio.checked);
+    }
+
+    return String(first.value || '').trim() !== '';
+  }
+
+  function updateProgress() {
+    const answered = requiredNames.filter(isAnswered).length;
+    const percent = requiredNames.length
+      ? Math.round((answered / requiredNames.length) * 100)
+      : 0;
+
+    progressBar.style.width = `${percent}%`;
+    progressText.textContent = `${percent}%`;
+  }
+
+  function validateForm() {
+    return requiredNames.every(isAnswered);
+  }
+
+  function pdfValue(value) {
+    return value && String(value).trim() ? String(value).trim() : 'Não informado';
+  }
+
+  function addWrappedText(pdf, text, x, y, maxWidth, lineHeight = 5.6) {
+    const lines = pdf.splitTextToSize(String(text), maxWidth);
+    pdf.text(lines, x, y);
+    return y + (lines.length * lineHeight);
+  }
+
+  function ensurePageSpace(pdf, currentY, neededHeight, pageHeight, topMargin, bottomMargin) {
+    const usableBottom = pageHeight - bottomMargin;
+    if (currentY + neededHeight > usableBottom) {
+      pdf.addPage();
+      return topMargin;
+    }
+    return currentY;
+  }
+
+  function drawSection(pdf, sectionTitle, items, currentY, config) {
+    const { pageHeight, margin, contentWidth, topMargin, bottomMargin } = config;
+
+    const estimatedHeight = 16 + items.reduce((sum, item) => {
+      const labelLines = pdf.splitTextToSize(item.label, contentWidth).length;
+      const valueLines = pdf.splitTextToSize(item.value, contentWidth).length;
+      return sum + (labelLines * 5) + (valueLines * 5.6) + 8;
+    }, 0);
+
+    currentY = ensurePageSpace(
+      pdf,
+      currentY,
+      Math.min(estimatedHeight, pageHeight - topMargin - bottomMargin),
+      pageHeight,
+      topMargin,
+      bottomMargin
+    );
+
+    pdf.setFont('times', 'bold');
+    pdf.setFontSize(17);
+    pdf.setTextColor(74, 47, 38);
+    pdf.text(sectionTitle, margin + 6, currentY);
+
+    pdf.setDrawColor(195, 138, 107);
+    pdf.setLineWidth(0.8);
+    pdf.line(margin, currentY - 4.5, margin, currentY + 2.5);
+
+    currentY += 10;
+
+    items.forEach((item) => {
+      const labelLines = pdf.splitTextToSize(item.label, contentWidth).length;
+      const valueLines = pdf.splitTextToSize(item.value, contentWidth).length;
+      const blockHeight = (labelLines * 5) + (valueLines * 5.6) + 8;
+
+      currentY = ensurePageSpace(pdf, currentY, blockHeight, pageHeight, topMargin, bottomMargin);
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11.2);
+      pdf.setTextColor(74, 47, 38);
+      currentY = addWrappedText(pdf, item.label, margin, currentY, contentWidth, 5);
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(11);
+      pdf.setTextColor(92, 77, 70);
+      currentY = addWrappedText(pdf, item.value, margin, currentY + 0.8, contentWidth, 5.6);
+
+      currentY += 3;
+    });
+
+    return currentY + 3;
+  }
+
+  async function exportPDF() {
+    if (!validateForm()) {
+      alert('Por favor, preencha todos os campos obrigatórios antes de gerar o PDF.');
+      return;
+    }
+
+    const originalBtnText = pdfBtn.textContent;
+    pdfBtn.textContent = 'Gerando PDF...';
+    pdfBtn.disabled = true;
+
+    try {
+      const data = getFormData();
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 16;
+      const topMargin = 18;
+      const bottomMargin = 18;
+      const contentWidth = pageWidth - (margin * 2);
+
+      let y = topMargin;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(195, 138, 107);
+      pdf.setFontSize(10);
+      pdf.text('CHECKLIST SEMANAL', margin, y);
+      y += 10;
+
+      pdf.setTextColor(74, 47, 38);
+      pdf.setFont('times', 'bold');
+      pdf.setFontSize(24);
+      pdf.text('Controle e consciência', margin, y);
+      y += 8;
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(13);
+      pdf.text('Pra você se observar com sinceridade', margin, y);
+      y += 10;
+
+      pdf.setDrawColor(235, 229, 221);
+      pdf.setFillColor(247, 244, 239);
+      pdf.roundedRect(margin, y, contentWidth, 17, 3, 3, 'FD');
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.setTextColor(74, 47, 38);
+      pdf.text(`Nome: ${pdfValue(data.clientName)}`, margin + 4, y + 6.5);
+      pdf.text(`Data: ${pdfValue(data.fillDate)}`, margin + 4, y + 12.5);
+      y += 26;
+
+      const config = { pageHeight, margin, contentWidth, topMargin, bottomMargin };
+
+      y = drawSection(pdf, '1. Comportamento na semana', [
+        { label: 'Você acessou pornografia?', value: pdfValue(data.pornSeen) },
+        ...(data.pornTimes && String(data.pornTimes).trim()
+          ? [{ label: 'Se sim, quantas vezes?', value: pdfValue(data.pornTimes) }]
+          : []),
+        { label: 'Quando a vontade veio, você conseguiu pausar?', value: pdfValue(data.heldUrge) },
+        { label: 'Teve momentos de autotoque?', value: pdfValue(data.selfTouch) },
+        { label: 'Foi uma escolha consciente ou no automático?', value: pdfValue(data.touchMode) },
+        { label: 'Conseguiu ficar alguns dias sem?', value: pdfValue(data.daysWithout) }
+      ], y, config);
+
+      y = drawSection(pdf, '2. Ambiente', [
+        { label: 'Você bloqueou conteúdos que te estimulam?', value: pdfValue(data.blockedContent) },
+        { label: 'Evitou redes sociais com conteúdo sexualizado?', value: pdfValue(data.avoidedSocial) },
+        { label: 'Usou celular na cama?', value: pdfValue(data.phoneInBed) }
+      ], y, config);
+
+      y = drawSection(pdf, '3. Corpo', [
+        { label: 'Banho frio ou final frio', value: pdfValue(data.coldShower) },
+        { label: 'Movimento físico', value: pdfValue(data.movement) }
+      ], y, config);
+
+      y = drawSection(pdf, '4. Quando veio a vontade', [
+        { label: 'Quantas vezes sentiu vontade de assistir pornografia?', value: pdfValue(data.strongUrges) },
+        { label: 'Em quantas você conseguiu parar antes de agir?', value: pdfValue(data.pausedBeforeActing) },
+        { label: 'Você aplicou alguma técnica nesses momentos?', value: pdfValue(data.techniques) },
+        { label: 'Como lidou com o olhar e pensamentos ao ver mulheres na rua?', value: pdfValue(data.streetTrigger) },
+        { label: 'O que você fez nessas horas?', value: pdfValue(data.whatDidYouDo) }
+      ], y, config);
+
+      y = drawSection(pdf, '5. Seu estado emocional', [
+        { label: 'Como você estava antes da vontade?', value: pdfValue(data.beforeFeeling) },
+        ...(data.beforeFeelingOther && String(data.beforeFeelingOther).trim()
+          ? [{ label: 'Se marcou outro, qual?', value: pdfValue(data.beforeFeelingOther) }]
+          : []),
+        { label: 'Como você se sentiu depois?', value: pdfValue(data.afterFeeling) }
+      ], y, config);
+
+      y = drawSection(pdf, '6. Reflexão da semana', [
+        { label: 'Que nota você dá pra sua semana?', value: pdfValue(data.weekScore) },
+        { label: 'O que você fez bem?', value: pdfValue(data.didWell) },
+        { label: 'Onde você cedeu?', value: pdfValue(data.slipped) },
+        { label: 'O que você quer fazer diferente na próxima semana?', value: pdfValue(data.nextWeek) }
+      ], y, config);
+
+      y = ensurePageSpace(pdf, y, 24, pageHeight, topMargin, bottomMargin);
+      pdf.setDrawColor(74, 47, 38);
+      pdf.setLineWidth(0.2);
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 8;
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.setTextColor(195, 138, 107);
+      pdf.text('Controle não é não sentir vontade. É não ser controlado por ela.', pageWidth / 2, y, { align: 'center' });
+      y += 8;
+      pdf.text('Ao finalizar, gere o PDF e envie para sua terapeuta.', pageWidth / 2, y, { align: 'center' });
+      y += 10;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9.5);
+      pdf.setTextColor(120, 112, 106);
+      pdf.text('Documento para uso terapêutico exclusivo · Psicoterapeuta Cleo Martins', pageWidth / 2, y, { align: 'center' });
+
+      const fileNameBase = (data.clientName && data.clientName.trim())
+        ? data.clientName.trim().replace(/\s+/g, '_')
+        : 'paciente';
+
+      pdf.save(`checklist-semanal_${fileNameBase}.pdf`);
+    } catch (err) {
+      console.error('Erro PDF:', err);
+      alert('Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      pdfBtn.textContent = originalBtnText;
+      pdfBtn.disabled = false;
+    }
+  }
+</script>
 </body>
 </html>
